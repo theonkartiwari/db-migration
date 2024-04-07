@@ -1,0 +1,14 @@
+app:
+  migration:
+    source:
+      uri: mongodb://localhost:27017/sourceDB
+    targets:
+      targetDB1:
+        uri: mongodb://localhost:27017/targetDB1
+        collections: [mycollection, c4]
+      targetDB2:
+        uri: mongodb://localhost:27017/targetDB2
+        collections: [c3, c7]
+      targetDB3:
+        uri: mongodb://localhost:27017/targetDB3
+        collections: [c5]
