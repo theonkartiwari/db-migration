@@ -2,15 +2,18 @@ package com.mastercard.dbmigration.service;
 
 
 import com.mastercard.dbmigration.config.MigrationProperties;
+import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
 import org.springframework.stereotype.Service;
 import com.mongodb.client.MongoClients;
 
 import java.util.List;
 
 @Service
+@Slf4j
 public class DataMigrationService {
 
     private final MongoTemplate sourceMongoTemplate;
@@ -21,28 +24,36 @@ public class DataMigrationService {
         this.sourceMongoTemplate = sourceMongoTemplate;
         this.migrationProperties = migrationProperties;
     }
+;
 
     public void migrateData() {
-        System.out.println("Inside migrate Data");
+        log.info("Starting data migration process.");
         MigrationProperties.SourceDatabase sourceDb = migrationProperties.getMigration().getSource();
-        MongoTemplate sourceTemplate = new MongoTemplate(MongoClients.create(sourceDb.getUri()), "sourceDB");
+        SimpleMongoClientDatabaseFactory sourceFactory = new SimpleMongoClientDatabaseFactory(sourceDb.getUri());
+        MongoTemplate sourceTemplate = new MongoTemplate(sourceFactory);
 
         migrationProperties.getMigration().getTargets().forEach((dbKey, targetDb) -> {
-            System.out.println("Preparing to migrate to: " + dbKey);
-            MongoTemplate targetTemplate = new MongoTemplate(MongoClients.create(targetDb.getUri()), dbKey);
+            log.info("Preparing to migrate to database: {}", dbKey);
+            SimpleMongoClientDatabaseFactory targetFactory = new SimpleMongoClientDatabaseFactory(targetDb.getUri());
+            MongoTemplate targetTemplate = new MongoTemplate(targetFactory);
+
             targetDb.getCollections().forEach(collection -> {
-                System.out.println("Migrating collection: " + collection);
+                log.info("Processing collection: {}", collection);
                 List<Document> documents = sourceTemplate.findAll(Document.class, collection);
-                System.out.println("Found " + documents.size() + " documents in collection: " + collection);
                 if (!documents.isEmpty()) {
-                    targetTemplate.insert(documents, collection);
-                    System.out.println("Documents inserted to " + dbKey + " into " + collection);
+                    log.info("Found {} documents in collection: {}. Inserting into target.", documents.size(), collection);
+                    documents.forEach(document -> {
+                        targetTemplate.save(document, collection);
+                    });
+                    log.info("Documents processed for collection: {}", collection);
                 } else {
-                    System.out.println("No documents found in collection: " + collection);
+                    log.info("No documents found in source collection: {}. No action required.", collection);
                 }
             });
         });
-        System.out.println("Migration completed successfully");
+        log.info("Data migration completed successfully.");
     }
+
+
 
 }

@@ -1,14 +1,15 @@
 app:
   migration:
     source:
-      uri: mongodb://localhost:27017/sourceDB
+      uri: mongodb://localhost:27017/mgdb_dcen1
     targets:
-      targetDB1:
-        uri: mongodb://localhost:27017/targetDB1
-        collections: [mycollection, c4]
-      targetDB2:
-        uri: mongodb://localhost:27017/targetDB2
-        collections: [c3, c7]
+      mgdb_dneas1:
+        uri: mongodb://localhost:27017/mgdb_dneas1
+        collections: [emailProgramData, emailTestData]
+      mgdb_dnmr1:
+        uri: mongodb://localhost:27017/mgdb_dnmr1
+        collections: [smsShortCodeData]
+        #Just for testing if target DB does not exist.
       targetDB3:
         uri: mongodb://localhost:27017/targetDB3
         collections: [c5]
